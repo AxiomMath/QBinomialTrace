@@ -1,0 +1,171 @@
+\documentclass[11pt]{amsart}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Pui}{\mathcal{P}}
+\newcommand{\TrZ}{\operatorname{Tr}_{\Z}}
+\newcommand{\den}{\operatorname{den}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\PhiKS}{\Phi_{k,s}}
+\newcommand{\qbinom}[2]{\genfrac{[}{]}{0pt}{}{#1}{#2}_{q}}
+\newcommand{\coeff}[2]{[q^{#1}]#2}
+\newcommand{\geqcoef}{\succeq_q}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\begin{document}
+
+
+
+For a nonnegative integer $n$, the $q$-shifted factorial is
+\[
+  (z;q)_n:=\prod_{j=0}^{n-1}(1-zq^j),
+  \qquad (z;q)_0:=1.
+\]
+For integers $N\geq k\geq 0$, the Gaussian binomial coefficient is
+\[
+  \qbinom{N}{k}
+  :=\frac{(q;q)_N}{(q;q)_k(q;q)_{N-k}}.
+\]
+It is a polynomial in $q$ with nonnegative integer coefficients.  Among its
+standard interpretations, $\qbinom{N}{k}$ is the rank-generating function for
+partitions whose Ferrers diagrams fit inside a $k\times (N-k)$ rectangle; see,
+for example, \cite[Chapter 3]{Andrews} and \cite[Section 1.7]{Stanley}.
+
+For a positive rational number $r$ and an integer $k\geq 0$, Han and Xiong
+\cite{HanXiong} consider the fractional-index extension
+\begin{equation}\label{eq:generalized-qbinom}
+  G_{r,k}(q)
+  :=\qbinom{r+k}{k}
+  :=\frac{(q^{r+1};q)_k}{(q;q)_k}.
+\end{equation}
+When $r$ is a positive integer, this is the usual Gaussian binomial
+coefficient.  If $r=a/b$ is nonintegral and written in lowest terms, then
+$G_{r,k}(q)$ is naturally a formal power series in $q^{1/b}$.  Han and Xiong
+defined its \emph{integer trace} by discarding every term whose exponent is not
+an integer.  We write
+\[
+  \T_{r,k}(q):=\TrZ\bigl(G_{r,k}(q)\bigr)\in\Q[[q]].
+\]
+For two ordinary power series $F,G\in\Q[[q]]$, write
+\[
+  F\geqcoef G
+  \quad\Longleftrightarrow\quad
+  \coeff{n}{(F-G)}\geq 0\quad\text{for every }n\geq 0.
+\]
+The central conjecture of Han and Xiong is
+\begin{equation}\label{eq:HX-conjecture}
+  \T_{1/2,k}(q)\geqcoef \T_{r,k}(q)
+  \qquad(r\in\Q_{>0},\ k\geq 1).
+\end{equation}
+They proved \eqref{eq:HX-conjecture} for every $r$ when $k=1,2,3$, and for
+every $k$ when $r$ is a positive integer or when $r=m+1/2$ with
+$m\geq 0$.  They also verified the cases $r=1/3$ and $r=1/4$ for
+$1\leq k\leq 150$ by exact symbolic computation \cite{HanXiong}.
+
+The main result is a general comparison principle.  For a positive rational
+number $x$, let $\den(x)$ denote the positive denominator of $x$ in lowest
+terms.
+
+\begin{theorem}[Support dominance]\label{thm:support-dominance}
+Let $u=c/d$ and $r=a/b$ be positive rational numbers in lowest terms.  Suppose
+that
+\begin{equation}\label{eq:dominance-hypotheses}
+  d\ \text{is even},
+  \qquad d\mid \operatorname{lcm}(b,2),
+  \qquad u\leq r.
+\end{equation}
+Then, for every integer $k\geq 1$,
+\[
+  \T_{u,k}(q)\geqcoef \T_{r,k}(q).
+\]
+\end{theorem}
+
+Taking $u=1/2$ gives an immediate extension of both infinite families treated
+in \cite{HanXiong}.
+
+\begin{corollary}\label{cor:half-line}
+For every rational number $r\geq 1/2$ and every integer $k\geq 1$,
+\[
+  \T_{1/2,k}(q)\geqcoef \T_{r,k}(q).
+\]
+\end{corollary}
+
+The same theorem gives a reduction of the entire conjecture.  Define the
+\emph{even core} of $r$ by
+\begin{equation}\label{eq:even-core}
+  r^{\flat}:=\frac{1}{\operatorname{lcm}(\den(r),2)}.
+\end{equation}
+Thus, if $r=a/b$ is reduced, then
+\[
+ r^{\flat}=
+ \begin{cases}
+   1/b,& b\text{ even},\\
+   1/(2b),& b\text{ odd}.
+ \end{cases}
+\]
+
+\begin{theorem}[Canonical reduction]\label{thm:canonical-reduction}
+For every positive rational number $r$ and every integer $k\geq 1$,
+\begin{equation}\label{eq:core-dominates}
+  \T_{r^{\flat},k}(q)\geqcoef \T_{r,k}(q).
+\end{equation}
+Consequently, the Han--Xiong conjecture \eqref{eq:HX-conjecture} is equivalent
+to the family of inequalities
+\begin{equation}\label{eq:unit-family}
+  \T_{1/2,k}(q)\geqcoef \T_{1/(2m),k}(q)
+  \qquad(m\geq 1,\ k\geq 1).
+\end{equation}
+For a fixed $k$, it is enough to check
+\begin{equation}\label{eq:finite-unit-family}
+  2\leq m\leq \left\lfloor\frac{k}{2}\right\rfloor.
+\end{equation}
+\end{theorem}
+
+
+
+\begin{thebibliography}{99}
+
+\bibitem{Andrews}
+G.~E. Andrews,
+\emph{The Theory of Partitions},
+Cambridge Mathematical Library, Cambridge University Press, Cambridge, 1998.
+
+
+\bibitem{HanXiong}
+G.-N. Han and H.~Xiong,
+The $1/2$-conjecture for $q$-binomial coefficients with fractional index,
+\emph{arXiv preprint} arXiv:2606.01919v1 (2026).
+
+\bibitem{Stanley}
+R.~P. Stanley,
+\emph{Enumerative Combinatorics, Vol.~1}, second ed.,
+Cambridge Studies in Advanced Mathematics, vol.~49,
+Cambridge University Press, Cambridge, 2012.
+
+\end{thebibliography}
+
+\end{document}
