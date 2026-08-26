@@ -1,0 +1,21 @@
+{
+  "challenge_module": "QBinomialTrace.problem",
+  "solution_module": "QBinomialTrace.solution",
+  "theorem_names": [
+    "qbinom_eq_zero_of_lt",
+    "qbinom_mul_qqPochhammer",
+    "partCount_gen",
+    "support_dominance",
+    "half_line_dominance",
+    "core_dominance",
+    "HX_iff_unit_family",
+    "HXk_iff_UFk",
+    "finite_unit_family_check"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}
