@@ -1,7 +1,8 @@
-import Mathlib
-set_option backward.isDefEq.respectTransparency false
+module
 
-/-
+public import Mathlib
+
+/-!
 # Problem Description
 
 We work with ordinary formal power series in `ℚ[[q]]` (only integer exponents of
@@ -36,6 +37,8 @@ Background source: `main.tex` and the Han–Xiong–Guo–Niu paper (exponent fo
 eq. (6),(7), partition series eq. (12), convolution formula eq. (13),
 even core eq. (14), conjecture eq. (8)).
 -/
+
+@[expose] public section
 
 open Polynomial
 
@@ -260,7 +263,7 @@ theorem Pgen_zero : Pgen 0 = 1 := by
   ext n
   rw [PowerSeries.coeff_mk]
   rcases eq_or_ne n 0 with h | h
-  · subst h; simp [Polynomial.coeff_one]
+  · subst h; simp
   · simp [Polynomial.coeff_one, h, PowerSeries.coeff_one]
 
 /-- `Qgen 0 = 1`: only the empty partition of `0` has all parts `≤ 0`. -/
@@ -277,10 +280,10 @@ theorem Qgen_zero : Qgen 0 = 1 := by
       unfold partCount
       rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
       intro p _
-      push_neg
+      push Not
       have hsum : p.parts.sum = n := p.parts_sum
       by_contra hc
-      push_neg at hc
+      push Not at hc
       have hz : p.parts = 0 := by
         rw [Multiset.eq_zero_iff_forall_notMem]
         intro x hx
@@ -304,8 +307,7 @@ theorem Pgen_succ (k : ℕ) :
     ext n
     rw [PowerSeries.coeff_mk, hphi]
     simp only [RingHom.coe_comp, Function.comp_apply, PowerSeries.coeff_map,
-      Polynomial.coeToPowerSeries.ringHom_apply, Polynomial.coeff_coe, Int.coe_castRingHom,
-      eq_intCast]
+      Polynomial.coeToPowerSeries.ringHom_apply, Polynomial.coeff_coe, eq_intCast]
   rw [hPgen (k + 1), hPgen k, qqPochhammer_succ]
   rw [map_mul, map_sub, map_one, map_pow]
   congr 2
@@ -354,7 +356,7 @@ theorem partCount_recurrence (k n : ℕ) :
       partCount (k + 1) N
         = (S.filter (fun p => ¬ (k + 1) ∈ p.parts)).card
           + (S.filter (fun p => (k + 1) ∈ p.parts)).card := by
-    have := Finset.filter_card_add_filter_neg_card_eq_card
+    have := Finset.card_filter_add_card_filter_not
       (s := S) (p := fun p : Nat.Partition N => (k + 1) ∈ p.parts)
     rw [partCount, ← hS]
     omega
@@ -442,7 +444,7 @@ theorem Qgen_succ (k : ℕ) :
   rw [sub_mul, one_mul, map_sub, PowerSeries.coeff_X_pow_mul']
   rw [PowerSeries.coeff_mk, PowerSeries.coeff_mk]
   by_cases hn : k + 1 ≤ n
-  · rw [if_pos hn]
+  · rw [ite_eq_left hn]
     rw [PowerSeries.coeff_mk]
     -- use recurrence with m := n - (k+1), so n = m + (k+1)
     obtain ⟨m, rfl⟩ : ∃ m, n = m + (k + 1) := ⟨n - (k + 1), by omega⟩
@@ -450,8 +452,8 @@ theorem Qgen_succ (k : ℕ) :
     simp only [Nat.add_sub_cancel]
     push_cast
     ring
-  · rw [if_neg hn, PowerSeries.coeff_mk]
-    push_neg at hn
+  · rw [ite_eq_right hn, PowerSeries.coeff_mk]
+    push Not at hn
     rw [partCount_succ_of_lt k n hn, sub_zero]
 
 /-- Def 2 correctness: the generating function of `p_k` is `1/(q;q)_k`, i.e.
@@ -460,7 +462,7 @@ theorem Qgen_succ (k : ℕ) :
 theorem partCount_gen (k : ℕ) :
     (PowerSeries.mk (fun n => ((qqPochhammer k).coeff n : ℚ)))
       * PowerSeries.mk (fun n => (partCount k n : ℚ)) = 1 := by
-  show Pgen k * Qgen k = 1
+  change Pgen k * Qgen k = 1
   induction k with
   | zero => rw [Pgen_zero, Qgen_zero, mul_one]
   | succ m ih =>
@@ -588,26 +590,27 @@ theorem one_sub_Xpow_mul_geom (a : ℕ) (ha : 0 < a) :
   unfold geom
   rw [PowerSeries.coeff_mk, PowerSeries.coeff_one]
   by_cases hn : a ≤ n
-  · rw [if_pos hn, PowerSeries.coeff_mk]
+  · rw [ite_eq_left hn, PowerSeries.coeff_mk]
     by_cases hdvd : a ∣ n
     · -- a ∣ n and n ≥ a > 0, so n ≠ 0, and a ∣ n-a
       have hdvd2 : a ∣ n - a := Nat.dvd_sub hdvd (dvd_refl a)
-      rw [if_pos hdvd, if_pos hdvd2, if_neg (by omega : n ≠ 0)]; ring
+      rw [ite_eq_left hdvd, ite_eq_left hdvd2, ite_eq_right (by omega : n ≠ 0)]; ring
     · have han : a < n := by
         rcases lt_or_eq_of_le hn with h | h
         · exact h
         · exact absurd (h ▸ dvd_refl a) hdvd
       have hdvd2 : ¬ a ∣ n - a := by
         rw [Nat.dvd_sub_self_right]
-        push_neg
+        push Not
         exact ⟨hdvd, han⟩
-      rw [if_neg hdvd, if_neg hdvd2, if_neg (by rintro rfl; exact hdvd (dvd_zero a))]; ring
-  · rw [if_neg hn]
+      rw [ite_eq_right hdvd, ite_eq_right hdvd2,
+        ite_eq_right (by rintro rfl; exact hdvd (dvd_zero a))]; ring
+  · rw [ite_eq_right hn]
     by_cases hne : n = 0
     · subst hne
-      rw [if_pos (dvd_zero a), if_pos rfl]; ring
+      rw [ite_eq_left (dvd_zero a), ite_eq_left rfl]; ring
     · have hn0 : ¬ a ∣ n := fun hdvd => hn (Nat.le_of_dvd (Nat.pos_of_ne_zero hne) hdvd)
-      rw [if_neg hn0, if_neg hne]; ring
+      rw [ite_eq_right hn0, ite_eq_right hne]; ring
 
 theorem geom_nonneg (a n : ℕ) : 0 ≤ PowerSeries.coeff (R := ℚ) n (geom a) := by
   unfold geom; rw [PowerSeries.coeff_mk]; split <;> norm_num
@@ -645,13 +648,13 @@ theorem one_sub_X_mul_finiteGeom {A B : ℕ} (hAB : A ≤ B) :
   unfold finiteGeom
   simp only [PowerSeries.coeff_mk]
   by_cases h1 : 1 ≤ n
-  · rw [if_pos h1]
+  · rw [ite_eq_left h1]
     split_ifs <;>
       first
         | rfl
         | (exfalso; omega)
         | norm_num
-  · rw [if_neg h1]
+  · rw [ite_eq_right h1]
     split_ifs <;>
       first
         | rfl
@@ -705,7 +708,7 @@ theorem trace_eq_numTrace_mul_Qgen (rho : ℚ) (hrho : 0 < rho) (k : ℕ) :
       · have h0 : (0 : ℤ) ≤ (d : ℤ) - n - A := by
           have : (n : ℤ) + A ≤ d := by exact_mod_cast hle
           omega
-        rw [if_pos h0, if_pos hle]
+        rw [ite_eq_left h0, ite_eq_left hle]
         have htn : ((d : ℤ) - n - A).toNat = d - n - A := by
           omega
         rw [htn]
@@ -715,7 +718,7 @@ theorem trace_eq_numTrace_mul_Qgen (rho : ℚ) (hrho : 0 < rho) (k : ℕ) :
           have : ¬ (n : ℤ) + A ≤ d := by
             intro hc; apply hle; exact_mod_cast hc
           omega
-        rw [if_neg h0, if_neg hle]
+        rw [ite_eq_right h0, ite_eq_right hle]
         simp
     rw [hLHS]
     -- RHS side: rewrite each coeff.
@@ -731,8 +734,8 @@ theorem trace_eq_numTrace_mul_Qgen (rho : ℚ) (hrho : 0 < rho) (k : ℕ) :
       unfold qbinomShift Qgen
       rw [PowerSeries.coeff_mk, PowerSeries.coeff_mk]
       by_cases hAi : A ≤ i
-      · rw [if_pos hAi, if_pos hAi]
-      · rw [if_neg hAi, if_neg hAi]; ring
+      · rw [ite_eq_left hAi, ite_eq_left hAi]
+      · rw [ite_eq_right hAi, ite_eq_right hAi]; ring
     rw [hRHS]
     -- Now reindex: bijection n ↦ n + A between nonzero terms.
     -- Both sides are sums over range(d+1). Match via sum over the filtered set.
@@ -781,7 +784,7 @@ theorem tailGeom_nonneg (k n : ℕ) : 0 ≤ PowerSeries.coeff (R := ℚ) n (tail
   refine Finset.prod_induction _ (fun F => ∀ n, 0 ≤ PowerSeries.coeff (R := ℚ) n F)
     (fun a b ha hb => mul_coeff_nonneg ha hb) ?_ ?_
   · intro n
-    simp only [map_one, PowerSeries.coeff_one]
+    simp only [PowerSeries.coeff_one]
     split <;> norm_num
   · intro j _ n
     exact geom_nonneg j n
@@ -831,13 +834,13 @@ theorem qbinomShift_shift (k s A c : ℕ) :
   rw [PowerSeries.coeff_X_pow_mul']
   unfold qbinomShift
   by_cases hcn : c ≤ n
-  · rw [if_pos hcn, PowerSeries.coeff_mk, PowerSeries.coeff_mk]
+  · rw [ite_eq_left hcn, PowerSeries.coeff_mk, PowerSeries.coeff_mk]
     by_cases hAn : A ≤ n - c
-    · rw [if_pos hAn, if_pos (by omega : A + c ≤ n)]
+    · rw [ite_eq_left hAn, ite_eq_left (by omega : A + c ≤ n)]
       have hix : n - c - A = n - (A + c) := by omega
       rw [hix]
-    · rw [if_neg hAn, if_neg (by omega : ¬ A + c ≤ n)]
-  · rw [if_neg hcn, PowerSeries.coeff_mk, if_neg (by omega : ¬ A + c ≤ n)]
+    · rw [ite_eq_right hAn, ite_eq_right (by omega : ¬ A + c ≤ n)]
+  · rw [ite_eq_right hcn, PowerSeries.coeff_mk, ite_eq_right (by omega : ¬ A + c ≤ n)]
 
 /-- Support membership in divisibility form. -/
 theorem mem_support_iff_dvd (rho : ℚ) (hrho : 0 < rho) (k s : ℕ) :
@@ -863,7 +866,7 @@ theorem Rplus_subset_U {u r : ℚ} (hd_dvd : u.den ∣ Nat.lcm r.den 2) {s : ℕ
 /-- Monotonicity of the exponent in `ρ` on the support (both integers):
 `u ≤ r ⇒ E(s,u) ≤ E(s,r)`.  We assume `E(s,u), E(s,r) ∈ ℤ` (den = 1), which
 holds on `R₊ ⊆ support`. -/
-theorem exponentNat_mono {u r : ℚ} (hu : 0 < u) (hr : 0 < r) (hur : u ≤ r) (s : ℕ)
+theorem exponentNat_mono {u r : ℚ} (hur : u ≤ r) (s : ℕ)
     (hsu : (exponent s u).den = 1) (hsr : (exponent s r).den = 1) :
     exponentNat s u ≤ exponentNat s r := by
   -- E(s,u) ≤ E(s,r) as rationals
@@ -960,7 +963,7 @@ theorem numerator_one_sub_extraction (u r : ℚ) (hu : 0 < u) (hr : 0 < r)
       have hsr' : s ∈ support r k := (mem_support_iff_dvd r hr k s).mpr ⟨hsk, hdr⟩
       have hsu' : s ∈ support u k := (mem_support_iff_dvd u hu k s).mpr ⟨hsk, hdu⟩
       have hAB : exponentNat s u ≤ exponentNat s r := by
-        apply exponentNat_mono hu hr hur s
+        apply exponentNat_mono hur s
         · have := (Finset.mem_filter.mp hsu').2
           exact (exponent_den_eq_one_iff u hu s).mpr hdu
         · exact (exponent_den_eq_one_iff r hr s).mpr hdr
@@ -1078,10 +1081,10 @@ theorem half_line_dominance (r : ℚ) (hr : (1 : ℚ) / 2 ≤ r) :
   · rw [hden]; exact Nat.dvd_lcm_right _ _
   · exact hr
 
-/-- Denominator of the even core.  For `r > 0`, `evenCore r = 1/L` with
+/-- Denominator of the even core.  `evenCore r = 1/L` with
 `L = lcm(r.den, 2)`.  Since `L` is a positive even integer, `1/L` is already in
 lowest terms with denominator `L`, i.e. `(evenCore r).den = lcm(r.den, 2)`. -/
-theorem evenCore_den (r : ℚ) (hr : 0 < r) :
+theorem evenCore_den (r : ℚ) :
     (evenCore r).den = Nat.lcm r.den 2 := by
   -- `L := lcm(r.den,2) ≥ 2 > 0`, and `1/L = (L:ℚ)⁻¹` with `L` a positive nat is
   -- already reduced; use `Rat.inv_natCast_den_of_pos`.
@@ -1118,10 +1121,10 @@ theorem evenCore_le (r : ℚ) (hr : 0 < r) : evenCore r ≤ r := by
   linarith
 
 /-- The denominator of the even core is even. -/
-theorem evenCore_den_even (r : ℚ) (hr : 0 < r) : Even (evenCore r).den := by
+theorem evenCore_den_even (r : ℚ) : Even (evenCore r).den := by
   -- `(evenCore r).den = lcm(r.den, 2)` (by `evenCore_den`), and `2 ∣ lcm(_,2)`,
   -- so the denominator is even.
-  rw [evenCore_den r hr]
+  rw [evenCore_den r]
   exact ⟨Nat.lcm r.den 2 / 2, by
     have : (2 : ℕ) ∣ Nat.lcm r.den 2 := Nat.dvd_lcm_right _ _
     omega⟩
@@ -1144,13 +1147,13 @@ theorem core_dominance (r : ℚ) (hr : 0 < r) :
     have : (0 : ℚ) < (Nat.lcm r.den 2 : ℚ) := by exact_mod_cast hL
     positivity
   apply support_dominance (evenCore r) r hu0 hr
-  · exact evenCore_den_even r hr
-  · rw [evenCore_den r hr]
+  · exact evenCore_den_even r
+  · rw [evenCore_den r]
   · exact evenCore_le r hr
 
-/-- The even core is a unit-family member: for `r > 0`, `evenCore r = 1/(2m)`
+/-- The even core is a unit-family member: `evenCore r = 1/(2m)`
 where `2m = lcm(r.den, 2)` (so `m = lcm(r.den,2)/2 ≥ 1`). -/
-theorem evenCore_eq_unit (r : ℚ) (_hr : 0 < r) :
+theorem evenCore_eq_unit (r : ℚ) :
     ∃ m : ℕ, 1 ≤ m ∧ evenCore r = 1 / (2 * m) := by
   -- Let `L = lcm(r.den, 2)`.  `2 ∣ L` and `L ≥ 2`, so `m := L/2 ≥ 1` and
   -- `2*m = L`.  Then `evenCore r = 1/L = 1/(2m)`.
@@ -1162,7 +1165,8 @@ theorem evenCore_eq_unit (r : ℚ) (_hr : 0 < r) :
   · omega
   · unfold evenCore
     have hm : 2 * (Nat.lcm r.den 2 / 2) = Nat.lcm r.den 2 := by omega
-    rw [show (2 * ((Nat.lcm r.den 2 / 2 : ℕ) : ℚ)) = ((2 * (Nat.lcm r.den 2 / 2) : ℕ) : ℚ) by push_cast; ring,
+    rw [show (2 * ((Nat.lcm r.den 2 / 2 : ℕ) : ℚ)) = ((2 * (Nat.lcm r.den 2 / 2) : ℕ) : ℚ) by
+          push_cast; ring,
         hm]
 
 /-- Statement 3(b), per-`k` equivalence: for every fixed integer `k ≥ 1`,
@@ -1180,7 +1184,7 @@ theorem HXk_iff_UFk (k : ℕ) (hk : 1 ≤ k) : HXk k ↔ UFk k := by
       positivity
     exact hHX (1 / (2 * m)) hpos
   · intro hUF r hr
-    obtain ⟨m, hm, heq⟩ := evenCore_eq_unit r hr
+    obtain ⟨m, hm, heq⟩ := evenCore_eq_unit r
     have h1 : trace (1 / 2) k ⪰q trace (evenCore r) k := by
       rw [heq]; exact hUF m hm
     have h2 : trace (evenCore r) k ⪰q trace r k := core_dominance r hr k hk
@@ -1238,7 +1242,7 @@ theorem support_half_even (k : ℕ) {s : ℕ} (hs : s ∈ support (1 / 2) k) : E
 `s=0` dominance fact (source Prop. 5.2 Step 1): for `r=1/2`,
 `𝒯_{1/2,k} = 1/(q;q)_k + (nonneg remainder from the even `s>0` terms)`, so
 `𝒯_{1/2,k} ⪰q PowerSeries.mk (fun n => p_k(n))` (the reciprocal Pochhammer). -/
-theorem half_trace_dominates_recip (k : ℕ) (hk : 1 ≤ k) :
+theorem half_trace_dominates_recip (k : ℕ) :
     trace (1 / 2) k ⪰q PowerSeries.mk (fun n => (partCount k n : ℚ)) := by
   -- For `r = 1/2`, `S_{1/2,k} = {0,2,4,…}` and all signs are `+1`, so
   -- `c_{1/2,k}(d) = ∑_{s even} ∑_n β_{k,s}(n) p_k(d-n-E(s,1/2))`, whose `s=0`
@@ -1285,7 +1289,7 @@ theorem half_trace_dominates_recip (k : ℕ) (hk : 1 ≤ k) :
       intro s hs
       have hseven : Even s := support_half_even k hs
       have hsign : (-1 : ℤ) ^ s = 1 := hseven.neg_one_pow
-      show 0 ≤ (-1 : ℤ) ^ s * _
+      change 0 ≤ (-1 : ℤ) ^ s * _
       rw [hsign, one_mul]
       apply Finset.sum_nonneg
       intro n _
@@ -1409,7 +1413,7 @@ theorem finite_unit_family_check (k : ℕ) (hk : 1 ≤ k)
   · -- large m: k/2 < m  ⇒  k < 2m
     have h2m : k < 2 * m := by omega
     rw [trace_unit_large k m hk h2m]
-    exact half_trace_dominates_recip k hk
+    exact half_trace_dominates_recip k
   · -- small m: m ≤ k/2
     rcases Nat.lt_or_ge 1 m with h1 | h1
     · -- 2 ≤ m ≤ k/2

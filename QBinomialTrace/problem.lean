@@ -1,7 +1,8 @@
-import Mathlib
-set_option backward.isDefEq.respectTransparency false
+module
 
-/-
+public import Mathlib
+
+/-!
 # Problem Description
 
 We work with ordinary formal power series in `ℚ[[q]]` (only integer exponents of
@@ -36,6 +37,8 @@ Background source: `main.tex` and the Han–Xiong–Guo–Niu paper (exponent fo
 eq. (6),(7), partition series eq. (12), convolution formula eq. (13),
 even core eq. (14), conjecture eq. (8)).
 -/
+
+@[expose] public section
 
 open Polynomial
 
